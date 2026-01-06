@@ -144,5 +144,5 @@ Thresholds are configurable and region-dependent.
 
 ---
 
-## 🧱 System Architecture
+
 
