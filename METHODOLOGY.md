@@ -52,61 +52,87 @@ To ensure physical relevance and numerical stability, raw datasets were transfor
 
 ---
 
-## 4. Machine Learning Downscaling
+## 5. Data Preprocessing
 
-- Model: XGBoost Regression
-- Target: NO₂ column enhancement factor
-- Training strategy:
-  - Spatial station holdout
-  - Temporal separation
-- Output: Fine-resolution **relative NO₂ column proxy**
+Robust preprocessing steps were applied to ensure spatial and temporal consistency:
 
-⚠️ The ML output is **unitless** and represents relative spatial variation.
+- **Spatial alignment:**  
+  All datasets were reprojected to a common coordinate reference system and resampled to a consistent grid.
+- **Temporal matching:**  
+  Monthly composites were generated to align datasets with different temporal resolutions.
+- **Missing values:**  
+  Pixels affected by clouds or data gaps were masked and excluded from model fitting to avoid bias.
+
+These steps ensure reproducibility and engineering robustness.
 
 ---
 
-## 5. Column-Conserving Correction
+## 6. Model Training
 
-To preserve satellite mass consistency:
+A supervised machine learning model was trained to learn the mapping between predictors and NO₂ columns.
 
+- **Algorithm used:** Random Forest Regressor
+- **Train–test strategy:**  
+  - **Temporal split:** Training on earlier months, testing on later months to evaluate seasonal generalization.
+  - **Spatial split:** Selected regions were withheld entirely from training to test spatial transferability.
+- **Rationale:**  
+  Random Forests are well-suited for nonlinear relationships, robust to multicollinearity, and interpretable.
+
+---
+
+## 7. Fishnet Grid Creation
+
+A fine-resolution fishnet grid was generated to produce high-resolution outputs.
+
+- **Grid size:** 500 m × 500 m
+- **Total cells:** Dependent on study area extent
+- **Justification:**  
+  This resolution balances computational feasibility with urban-scale spatial detail, capturing neighborhood-level NO₂ variability without excessive noise.
+
+---
+
+## 8. Surface NO₂ Estimation (Critical Step)
+
+Downscaled NO₂ column values were converted to surface concentrations using boundary layer physics.
+
+### 8.1 Equation
 \[
-NO₂_{fine} = \frac{NO₂_{ML}}{NO₂_{coarse}} \times NO₂_{TROPOMI}
+NO_{2,\;surface} = \frac{NO_{2,\;column}}{PBLH}
 \]
 
-This ensures:
-- No artificial increase in total column mass
-- Physical interpretability of fine-scale outputs
+### 8.2 Units
+- NO₂ column: mol/m²  
+- PBLH: meters  
+- Surface NO₂: mol/m³
+
+### 8.3 Assumptions
+- NO₂ is vertically well-mixed within the planetary boundary layer.
+- Contributions above the boundary layer are minimal for surface exposure assessment.
+- Monthly mean PBLH adequately represents vertical mixing conditions.
+
+This step anchors the ML output in atmospheric physics.
 
 ---
 
-## 6. Surface NO₂ Estimation
+## 9. Output Generation
 
-Surface NO₂ concentration is estimated using:
+The final surface NO₂ estimates were exported as GeoTIFF files.
 
-\[
-NO₂_{surface} = \frac{NO₂_{column}}{PBL} \times M_{NO₂}
-\]
-
-Where:
-- PBL = Planetary Boundary Layer height (m)
-- \(M_{NO₂}\) = molar mass of NO₂ (46 g/mol)
-
-Final unit: **µg/m³**
+- **Format:** GeoTIFF
+- **Projection:** WGS 84
+- **Why GeoTIFF:**  
+  GeoTIFF is a standard geospatial format compatible with GIS software, cloud platforms, and policy workflows.
 
 ---
 
-## 7. Visualization & Inspection
+## 10. Visualization
 
-Implemented in Google Earth Engine:
-- Split-panel visualization (coarse vs fine)
-- Discrete color mapping for pollution levels
-- Pixel-level inspector panel
-- High-risk surface NO₂ alert masking
+All intermediate and final products were visualized using Google Earth Engine.
 
----
+- **Displayed layers:**  
+  - Coarse NO₂ columns  
+  - Downscaled fine-resolution NO₂  
+  - Surface-corrected NO₂ estimates
+- **Purpose:**  
+  To enable qualitative assessment, spatial comparison, and interactive inspection
 
-## 8. Validation Strategy
-
-- Spatial consistency with satellite patterns
-- Qualitative comparison with CPCB station trends
-- Visual coherence across urban emission hotspots
