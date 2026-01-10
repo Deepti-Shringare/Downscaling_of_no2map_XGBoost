@@ -30,6 +30,45 @@ This project addresses the gap by generating **500 m resolution NO₂ maps** whi
 
 ---
 
+## 🧠 Methodology Overview
+## 🧠 Methodology Overview
+
+```mermaid
+flowchart TD
+    A[Data Collection] --> B[CPCB Station NO2]
+    A --> C[Population Density]
+    A --> D[VIIRS Night-time Lights]
+    A --> E[ERA5-Land Meteorology]
+    A --> F[ERA5-Atmosphere]
+
+    E --> E1[Wind: u10, v10]
+    E --> E2[Temperature]
+    E --> E3[Surface Pressure]
+
+    F --> F1[Boundary Layer Height]
+    F --> F2[Cloud Cover]
+
+    B --> G[Data Preprocessing & Merging]
+    C --> G
+    D --> G
+    E --> G
+    F --> G
+
+    G --> H[Model Training & Testing]
+    H --> H1[Random Forest]
+    H --> H2[XGBoost]
+
+    H --> I[500m × 500m Fishnet Grid]
+    I --> J[High-resolution NO2 Prediction]
+
+    J --> K[Surface NO2 Estimation]
+    K --> L[GeoTIFF Output]
+
+    L --> M[GEE Visualization]
+
+
+
+
 ## 🛰️ Data Sources
 
 | Data | Source | Resolution |
