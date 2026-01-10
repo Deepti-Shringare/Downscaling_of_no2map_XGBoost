@@ -71,7 +71,7 @@ These steps ensure reproducibility and engineering robustness.
 
 A supervised machine learning model was trained to learn the mapping between predictors and NO₂ columns.
 
-- **Algorithm used:** Random Forest Regressor
+- **Algorithm used:** XGBoost
 - **Train–test strategy:**  
   - **Temporal split:** Training on earlier months, testing on later months to evaluate seasonal generalization.
   - **Spatial split:** Selected regions were withheld entirely from training to test spatial transferability.
