@@ -5,7 +5,7 @@ The study focuses on the National Capital Territory (NCT) of Delhi, India, chara
 
 ---
 
-## 2. Data Preprocessing
+## 2. Data Sources
 
 ### 2.1 Satellite NO₂
 - Source: Sentinel-5P TROPOMI (OFFL L3)
@@ -67,16 +67,29 @@ These steps ensure reproducibility and engineering robustness.
 
 ---
 
+
+
 ## 5. Model Training
 
-A supervised machine learning model was trained to learn the mapping between predictors and NO₂ columns.
+A supervised machine learning model was trained to learn the nonlinear relationship between predictor variables and NO₂ concentrations.
 
-- **Algorithm used:** XGBoost
-- **Train–test strategy:**  
-  - **Temporal split:** Training on earlier months, testing on later months to evaluate seasonal generalization.
-  - **Spatial split:** Selected regions were withheld entirely from training to test spatial transferability.
-- **Rationale:**  
-  Random Forests are well-suited for nonlinear relationships, robust to multicollinearity, and interpretable.
+- **Algorithm used:** Extreme Gradient Boosting (XGBoost)
+- **Why XGBoost:**  
+  XGBoost efficiently captures complex nonlinear interactions, handles heterogeneous predictors, and performs well with limited training samples.
+
+### Train–Test Strategy
+- **Temporal split:**  
+  Training on earlier months and testing on later months to assess seasonal generalization.
+- **Spatial split:**  
+  Selected monitoring stations were completely excluded from training to evaluate spatial transferability.
+
+### Model Evaluation
+Model performance was assessed using:
+- Root Mean Square Error (RMSE)
+- Mean Absolute Error (MAE)
+- Coefficient of Determination (R²)
+
+This ensures both accuracy and generalization capability.
 
 ---
 
@@ -135,4 +148,14 @@ All intermediate and final products were visualized using Google Earth Engine.
   - Surface-corrected NO₂ estimates
 - **Purpose:**  
   To enable qualitative assessment, spatial comparison, and interactive inspection
+
+  
+  ## 10. Model Validation
+Model predictions were validated using independent CPCB monitoring stations not used during training. Statistical metrics (RMSE, MAE, R²) were computed to assess agreement between predicted and observed NO₂ concentrations. This validation strategy evaluates both spatial and temporal robustness of the proposed framework.
+
+## 11. Uncertainty and Assumptions
+
+The derived surface NO₂ concentrations represent estimated values subject to uncertainties in satellite retrievals, meteorological reanalysis data, and model assumptions. In particular, the assumption of uniform vertical mixing within the planetary boundary layer may not hold during stable atmospheric conditions. Therefore, the results are intended for scientific analysis and relative spatial assessment rather than regulatory compliance.
+
+
 
