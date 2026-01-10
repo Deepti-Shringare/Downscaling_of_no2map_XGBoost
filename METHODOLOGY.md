@@ -22,7 +22,7 @@ The study focuses on the National Capital Territory (NCT) of Delhi, India, chara
 | Dataset | Parameters |
 |-----|-------|
 |ERA5 ATMOS | BLH, Total cloud cover|
-|ERA5 LAND| U10,V10,WINDSPEED,Temperature, Surface pressure|
+|ERA5 LAND| U10, V10, windspeed ,Temperature, Surface pressure|
 |VIIRS| Night time dataset|
 |Worldpop| Population density|
 |CPCB| Sation wise NO2|
