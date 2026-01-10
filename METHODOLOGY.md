@@ -38,6 +38,17 @@ Predictor variables include:
 - Spatial coordinates (lat/lon)
 
 All features are resampled to a common 500 m grid.
+To ensure physical relevance and numerical stability, raw datasets were transformed into meaningful predictors:
+
+- **Population count → Population density:**  
+  Population counts were normalized by grid-cell area to obtain people per km².
+- **Wind components → Wind speed:**  
+  Wind speed was computed as:  
+  \[
+  WS = \sqrt{u^2 + v^2}
+  \]
+- **Normalization:**  
+  Continuous predictors were scaled using min–max normalization to prevent dominance of any single variable during model training.
 
 ---
 
