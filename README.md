@@ -1,148 +1,86 @@
-# Downscaling_of_no2map_XGBoost
-# 🛰️ High-Resolution NO₂ Downscaling & Alert System  
-### Satellite–Ground Data Fusion using ML and Atmospheric Correction
+# Downscaling of NO₂ Maps using XGBoost and Google Earth Engine
 
-## 📌 Overview
-This project develops a **scalable geospatial machine learning system** to generate **fine-resolution (500 m) NO₂ pollution maps** from **coarse satellite observations (~7 km)** and convert them into **actionable surface-level pollution alerts** for urban regions.
+This project presents a **physically-consistent machine learning framework** for downscaling coarse-resolution satellite NO₂ observations to fine spatial resolution over Delhi, India. The approach integrates **Sentinel-5P TROPOMI NO₂**, **meteorological reanalysis**, and **ground-based CPCB station data**, with deployment and visualization on **Google Earth Engine (GEE)**.
 
-The system integrates:
-- Satellite NO₂ (TROPOMI)
-- Meteorological data (ERA5 – Planetary Boundary Layer)
-- Ground observations (CPCB stations – India)
-- Machine Learning–based spatial downscaling
-- Rule-based alert generation
-
-⚠️ **Note**: Surface NO₂ values are *estimated* using atmospheric correction and are **not direct measurements**.
+The project is designed as:
+- A **research-grade air quality downscaling study**
+- A **production-ready geospatial ML pipeline**
+- A **solo, end-to-end project** suitable for DRDO / ISRO / product-based company evaluation
 
 ---
 
-## 🎯 Motivation
-Urban air pollution monitoring is limited by:
-- Sparse ground monitoring stations
-- Coarse satellite spatial resolution
-- Lack of neighborhood-level pollution intelligence
+## 📌 Problem Statement
 
-This project addresses these gaps by enabling:
-- High-resolution pollution mapping
-- Localized health-risk alerts
-- Decision-support for policy and defense applications
+Satellite-based NO₂ products (e.g., TROPOMI) provide global coverage but at coarse spatial resolution (~7 km), limiting their usability for:
+- Urban exposure analysis
+- City-scale pollution management
+- Localized alert systems
+
+This project addresses the gap by generating **500 m resolution NO₂ maps** while preserving physical consistency with satellite observations.
 
 ---
 
-## 🧠 Key Contributions
-- Downscaling satellite NO₂ from ~7 km to **500 m**
-- Fusion of satellite, meteorology, and ground data
-- PBL-corrected surface NO₂ estimation
-- Column-based and surface-based alert generation
-- Scalable, product-ready system design
+## 🧠 Core Idea
+
+1. Learn **sub-grid spatial patterns** of NO₂ using ML (XGBoost)
+2. Downscale coarse satellite columns using high-resolution predictors
+3. Apply **column-conserving correction**
+4. Convert column NO₂ to **surface concentration** using PBL height
+5. Visualize and inspect outputs interactively using GEE
 
 ---
 
-## 🗺️ Data Sources
+## 🛰️ Data Sources
 
-### 1️⃣ Satellite NO₂ (Column)
-- **Platform**: Sentinel-5P (TROPOMI)
-- **Dataset**: `COPERNICUS/S5P/OFFL/L3_NO2`
-- **Resolution**: ~7 km
-- **Variable**: Tropospheric NO₂ column (mol/m²)
-
----
-
-### 2️⃣ Meteorological Data
-- **Source**: ERA5 Hourly 
-- **Dataset**: `ECMWF/ERA5/HOURLY` and `ECMWF/ERA5_LAND`
-- **Variable**: Boundary Layer Height (meters),toatal cloud cover,Temeprature, pressure,u10,v10,windspeed
-
-Used to approximate vertical mixing for surface NO₂ estimation.
-
----
-- **Source**: VIIRS
-- **Dataset**: `VIIRS`
-- **Variable**: NIGHT TIME RADIATION
-
-### 3️⃣ Ground Truth (CPCB – India)
-- **Source**: Central Pollution Control Board (CPCB)
-- **Data**: Station-level surface NO₂ (µg/m³)
-
-⚠️ **Data Access Constraint**  
-CPCB does **not provide a public API**.
-
-**Approach Used**:
-- Manual CSV downloads from official CPCB portal
-- Automated preprocessing, validation, and station alignment
-- Quality-control flags for missing or unreliable measurements
-
-This reflects **real-world regulatory data constraints** in India.
+| Data | Source | Resolution |
+|----|------|------------|
+| NO₂ Column | Sentinel-5P TROPOMI | ~7 km |
+| Meteorology | ERA5 Reanalysis | ~30 km |
+| Land Features | MODIS, population, roads | 500 m |
+| Ground Truth | CPCB (39 stations, Delhi) | Point-based |
 
 ---
 
-## 🧮 Methodology
+## ⚙️ Methodology Overview
 
-### Step 1: Satellite Data Preprocessing
-- Daily averaging
-- Cloud and no-data masking
-- Spatial clipping to region of interest
+- Feature engineering using meteorology, land-use, and emission proxies
+- ML model training using **XGBoost regression**
+- Monthly NO₂ prediction at 500 m resolution
+- Column-conserving scaling using TROPOMI
+- Surface NO₂ estimation using ERA5 PBL height
+- Interactive inspection via GEE split-panel UI
 
----
-
-### Step 2: Machine Learning Downscaling
-A machine learning model is trained using:
-- Satellite NO₂
-- Meteorological parameters
-- Population and land-use proxies
-
-**Output**:
-- Fine-resolution (500 m) NO₂ *column proxy*
-
-> The ML output represents **relative spatial variability**, not a direct physical measurement.
+➡️ Full details: [`METHODOLOGY.md`](./METHODOLOGY.md)
 
 ---
 
-### Step 3: PBL-Corrected Surface NO₂ Estimation
-Satellite NO₂ represents a **vertical column concentration**.
+## 🗺️ Google Earth Engine Integration
 
-Surface-level NO₂ is approximated as:
-
-Surface NO₂ ≈ Column NO₂ / PBL Height
-
-Converted to µg/m³ using molecular mass assumptions.
-
-⚠️ This is an **estimated atmospheric correction**, widely used in air-quality research.
+- Monthly aggregation of satellite data
+- Physically corrected surface NO₂ estimation
+- Pixel-wise inspection panel
+- Discrete color-coded alert visualization
+- ML coverage masking
 
 ---
 
-## 🚨 Alert System Design
+## 📊 Outputs
 
-### Column-Based Alerts (Relative Risk)
-Percentile-based thresholds:
-- P50 → Normal
-- P75 → High
-- P90 → Severe
-
-Useful where surface estimation is uncertain.
+- Fine-resolution NO₂ column proxy (500 m)
+- Surface NO₂ concentration (µg/m³)
+- Interactive GEE App with inspector panel
+- GeoTIFF exports for further analysis
 
 ---
 
-### Surface-Level Alerts (Estimated)
-| Level | Surface NO₂ (µg/m³) | Interpretation |
-|------|--------------------|---------------|
-| NORMAL | < 80 | Acceptable |
-| HIGH | 80–150 | Health Advisory |
-| SEVERE | >150 | Health Risk |
+## ⚠️ Disclaimer
 
-Thresholds are configurable and region-dependent.
+This project is **research-oriented**. Surface NO₂ values are estimates and should not be interpreted as regulatory measurements.
 
 ---
 
-## 🖥️ Visualization
-- Side-by-side comparison:
-  - Coarse satellite NO₂
-  - Fine ML-downscaled NO₂
-  - Estimated surface NO₂
-- Interactive pixel inspection
-- Alert overlays highlighting risk zones
+## 👩‍💻 Author
 
----
-
-
-
+**Deepti Shringare**  
+B.E. EXTC | Air Quality ML | Earth Observation  
+Solo Project (End-to-End)
