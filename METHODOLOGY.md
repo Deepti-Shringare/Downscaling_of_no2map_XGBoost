@@ -35,7 +35,6 @@ Predictor variables include:
 - Meteorological parameters (temperature, wind, humidity)
 - Land-use proxies
 - Population density
-- Road density
 - Spatial coordinates (lat/lon)
 
 All features are resampled to a common 500 m grid.
