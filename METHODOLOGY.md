@@ -52,7 +52,7 @@ To ensure physical relevance and numerical stability, raw datasets were transfor
 
 ---
 
-## 5. Data Preprocessing
+## 4. Data Preprocessing
 
 Robust preprocessing steps were applied to ensure spatial and temporal consistency:
 
@@ -67,7 +67,7 @@ These steps ensure reproducibility and engineering robustness.
 
 ---
 
-## 6. Model Training
+## 5. Model Training
 
 A supervised machine learning model was trained to learn the mapping between predictors and NO₂ columns.
 
@@ -80,7 +80,7 @@ A supervised machine learning model was trained to learn the mapping between pre
 
 ---
 
-## 7. Fishnet Grid Creation
+## 6. Fishnet Grid Creation
 
 A fine-resolution fishnet grid was generated to produce high-resolution outputs.
 
@@ -91,21 +91,21 @@ A fine-resolution fishnet grid was generated to produce high-resolution outputs.
 
 ---
 
-## 8. Surface NO₂ Estimation (Critical Step)
+## 7. Surface NO₂ Estimation (Critical Step)
 
 Downscaled NO₂ column values were converted to surface concentrations using boundary layer physics.
 
-### 8.1 Equation
+### 7.1 Equation
 \[
 NO_{2,\;surface} = \frac{NO_{2,\;column}}{PBLH}
 \]
 
-### 8.2 Units
+### 7.2 Units
 - NO₂ column: mol/m²  
 - PBLH: meters  
 - Surface NO₂: mol/m³
 
-### 8.3 Assumptions
+### 7.3 Assumptions
 - NO₂ is vertically well-mixed within the planetary boundary layer.
 - Contributions above the boundary layer are minimal for surface exposure assessment.
 - Monthly mean PBLH adequately represents vertical mixing conditions.
@@ -114,7 +114,7 @@ This step anchors the ML output in atmospheric physics.
 
 ---
 
-## 9. Output Generation
+## 8. Output Generation
 
 The final surface NO₂ estimates were exported as GeoTIFF files.
 
@@ -125,7 +125,7 @@ The final surface NO₂ estimates were exported as GeoTIFF files.
 
 ---
 
-## 10. Visualization
+## 9. Visualization
 
 All intermediate and final products were visualized using Google Earth Engine.
 
