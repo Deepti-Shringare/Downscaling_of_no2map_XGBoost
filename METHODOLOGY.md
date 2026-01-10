@@ -19,9 +19,11 @@ The study focuses on the National Capital Territory (NCT) of Delhi, India, chara
 - Temporal alignment with satellite observations
 
 ### 2.3 Meteorological Parameters
-- ERA5 reanalysis data
-- Boundary Layer Height (PBL)
-- Monthly mean used for surface conversion
+|ERA5 ATMOS | BLH, Total cloud cover|
+|ERA5 LAND| U10,V10,WINDSPEED,Temperature, Surface pressure|
+|VIIRS| Night time dataset|
+|Worldpop| Population density|
+|CPCB| Sation wise NO2|
 
 ---
 
