@@ -1,1 +1,173 @@
 https://drive.google.com/file/d/1HZMVKdMXmpIFbuB_DIz0jkqMWsA7tcIr/view?usp=sharing
+
+FISHNET CODE
+// ==========================================================
+// STAGE 2 — DAILY VARIABLES ON STATIC 500m FISHNET (2024)
+// AUTO-MONTH LOOP | LEFT JOIN LOGIC | NaNs ALLOWED
+// ==========================================================
+
+// ----------------------------------------------------------
+// 0. LOAD STATIC FISHNET (YOU ALREADY CREATED THIS)
+// ----------------------------------------------------------
+var fishnet = ee.FeatureCollection(
+  'users/YOUR_USERNAME/Delhi_500m_Static_Fishnet' // 🔴 CHANGE PATH
+);
+
+Map.centerObject(fishnet, 9);
+print('Fishnet cells:', fishnet.size());
+
+// ----------------------------------------------------------
+// 1. DATE SETUP
+// ----------------------------------------------------------
+var year = 2024;
+var months = ee.List.sequence(1, 12);
+
+// ----------------------------------------------------------
+// 2. STATIC DATA
+// ----------------------------------------------------------
+
+// Population density (static)
+var population = ee.ImageCollection('WorldPop/GP/100m/pop')
+  .filterDate('2020-01-01', '2021-01-01')
+  .mean()
+  .rename('population_density');
+
+// Night lights (monthly)
+var nightlights = ee.ImageCollection('NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG')
+  .select('avg_rad');
+
+// ----------------------------------------------------------
+// 3. FUNCTION: PROCESS ONE MONTH
+// ----------------------------------------------------------
+var processMonth = function(m) {
+
+  m = ee.Number(m);
+  var start = ee.Date.fromYMD(year, m, 1);
+  var end   = start.advance(1, 'month');
+
+  print('Processing month:', start.format('YYYY-MM'));
+
+  // ------------------------------------
+  // Create list of days in month
+  // ------------------------------------
+  var days = ee.List.sequence(
+    0, end.difference(start, 'day').subtract(1)
+  ).map(function(d) {
+    return start.advance(d, 'day');
+  });
+
+  // ------------------------------------
+  // DAILY LOOP
+  // ------------------------------------
+  var dailyFC = ee.FeatureCollection(days.map(function(date) {
+
+    date = ee.Date(date);
+    var nextDay = date.advance(1, 'day');
+
+    // -----------------------------
+    // TROPOMI NO2 (daily mean)
+    // -----------------------------
+    var no2 = ee.ImageCollection('COPERNICUS/S5P/OFFL/L3_NO2')
+      .filterDate(date, nextDay)
+      .select('tropospheric_NO2_column_number_density')
+      .mean()
+      .rename('tropospheric_no2');
+
+    // -----------------------------
+    // ERA5-LAND DAILY
+    // -----------------------------
+    var era5land = ee.ImageCollection('ECMWF/ERA5_LAND/DAILY_AGGR')
+      .filterDate(date, nextDay)
+      .first();
+
+    var u10 = era5land.select('u_component_of_wind_10m').rename('u10');
+    var v10 = era5land.select('v_component_of_wind_10m').rename('v10');
+
+    var wind = u10.pow(2).add(v10.pow(2)).sqrt().rename('wind_speed');
+
+    var tempC = era5land
+      .select('temperature_2m')
+      .subtract(273.15)
+      .rename('temperature_C');
+
+    var sp = era5land
+      .select('surface_pressure')
+      .divide(100)
+      .rename('surface_pressure_hPa');
+
+    // -----------------------------
+    // ERA5 HOURLY → DAILY
+    // -----------------------------
+    var era5hourly = ee.ImageCollection('ECMWF/ERA5/HOURLY')
+      .filterDate(date, nextDay);
+
+    var blh = era5hourly
+      .select('boundary_layer_height')
+      .mean()
+      .rename('BLH');
+
+    var cloud = era5hourly
+      .select('total_cloud_cover')
+      .mean()
+      .rename('total_cloud_cover');
+
+    // -----------------------------
+    // NIGHT LIGHTS (MONTHLY)
+    // -----------------------------
+    var night = nightlights
+      .filter(ee.Filter.calendarRange(m, m, 'month'))
+      .mean()
+      .rename('night_light');
+
+    // -----------------------------
+    // STACK ALL VARIABLES
+    // -----------------------------
+    var image = ee.Image.cat([
+      no2,
+      u10, v10, wind,
+      tempC,
+      sp,
+      blh,
+      cloud,
+      night,
+      population
+    ]);
+
+    // -----------------------------
+    // REDUCE TO FISHNET (LEFT JOIN)
+    // -----------------------------
+    var reduced = image.reduceRegions({
+      collection: fishnet,
+      reducer: ee.Reducer.mean(),
+      scale: 500
+    });
+
+    return reduced.map(function(f) {
+      return f.set({
+        'date': date.format('YYYY-MM-dd'),
+        'year': year,
+        'month': m
+      });
+    });
+
+  })).flatten();
+
+  // ------------------------------------
+  // EXPORT MONTHLY CSV
+  // ------------------------------------
+  Export.table.toDrive({
+    collection: dailyFC,
+    description: 'Delhi_500m_Daily_Features_' + year + '_M' + m.format('%02d'),
+    fileFormat: 'CSV'
+  });
+};
+
+// ----------------------------------------------------------
+// 4. RUN FOR ALL MONTHS
+// ----------------------------------------------------------
+months.evaluate(function(ms) {
+  ms.forEach(function(m) {
+    processMonth(m);
+  });
+});
+
